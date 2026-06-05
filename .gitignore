@@ -1,0 +1,25 @@
+# Binary output
+bin/
+*.exe
+*.out
+
+# Go build cache
+/tmp/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Swagger generated (regenerate with swag init)
+docs/
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

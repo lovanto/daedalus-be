@@ -23,8 +23,8 @@ func Load() *Config {
 	return &Config{
 		DatabaseURL: required("DATABASE_URL"),
 		JWTSecret:   required("JWT_SECRET"),
-		GoAPIPort:   getOr("GO_API_PORT", "8000"),
-		PythonAIURL: getOr("PYTHON_AI_URL", "http://localhost:8001"),
+		GoAPIPort:   getOr("GO_API_PORT", "3010"),
+		PythonAIURL: getOr("PYTHON_AI_URL", "http://localhost:3020"),
 		AppEnv:      getOr("APP_ENV", "development"),
 	}
 }

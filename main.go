@@ -8,7 +8,7 @@
 // @contact.name   Daedalus
 // @contact.email  rifkylovanto@gmail.com
 //
-// @host      localhost:8000
+// @host      localhost:3010
 // @BasePath  /
 //
 // @securityDefinitions.apikey BearerAuth

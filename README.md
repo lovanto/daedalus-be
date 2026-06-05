@@ -69,7 +69,7 @@ Copy `.env.example` from the repo root, or set these environment variables:
 ```env
 DATABASE_URL=postgres://daedalus:daedalus@localhost:5432/daedalus
 JWT_SECRET=change-me-in-production
-GO_API_PORT=8000
+GO_API_PORT=3010
 PYTHON_AI_URL=http://localhost:8001
 GO_ENV=development   # set to "production" for JSON logs
 ```
@@ -89,7 +89,7 @@ go run .
 The server logs all registered routes on startup. Swagger UI is available at:
 
 ```
-http://localhost:8000/swagger/index.html
+http://localhost:3010/swagger/index.html
 ```
 
 ## API routes

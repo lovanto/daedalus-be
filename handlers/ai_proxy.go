@@ -30,9 +30,7 @@ func NewAIProxyHandler(db *pgxpool.Pool, aiBaseURL string) *AIProxyHandler {
 	return &AIProxyHandler{
 		db:        db,
 		aiBaseURL: aiBaseURL,
-		httpClient: &http.Client{
-			Timeout: 120 * time.Second,
-		},
+		httpClient: &http.Client{},
 	}
 }
 
@@ -270,9 +268,24 @@ func (h *AIProxyHandler) proxy(targetPath string) http.HandlerFunc {
 			log.Printf("[ai-proxy] agent=%s path=%s upstream_status=%d", agentID, targetPath, resp.StatusCode)
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		io.Copy(w, resp.Body) //nolint:errcheck
+		var result map[string]interface{}
+		if decErr := json.NewDecoder(resp.Body).Decode(&result); decErr != nil {
+			utils.Err(w, http.StatusInternalServerError, "failed to decode AI response")
+			return
+		}
+
+		if statusCode != http.StatusOK && statusCode != http.StatusCreated {
+			errMsg := "AI service error"
+			if detail, ok := result["detail"].(string); ok {
+				errMsg = detail
+			} else if msg, ok := result["error"].(string); ok {
+				errMsg = msg
+			}
+			utils.Err(w, statusCode, errMsg)
+			return
+		}
+
+		utils.JSON(w, statusCode, result)
 	}
 }
 

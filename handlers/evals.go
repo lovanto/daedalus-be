@@ -1,9 +1,12 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
@@ -136,8 +139,15 @@ func (h *EvalsHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Recalculate confidence score asynchronously (best-effort)
-	go h.service.CalculateConfidenceScore(r.Context(), agentID) //nolint:errcheck
+	// Recalculate confidence score in the background. Detach from the request
+	// context so the response returning here doesn't cancel the UPDATE.
+	go func() {
+		bg, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if _, err := h.service.CalculateConfidenceScore(bg, agentID); err != nil {
+			log.Printf("[evals] confidence recalc failed for agent=%s: %v", agentID, err)
+		}
+	}()
 
 	result := struct {
 		models.AgentEval

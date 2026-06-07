@@ -28,8 +28,8 @@ type AIProxyHandler struct {
 
 func NewAIProxyHandler(db *pgxpool.Pool, aiBaseURL string) *AIProxyHandler {
 	return &AIProxyHandler{
-		db:        db,
-		aiBaseURL: aiBaseURL,
+		db:         db,
+		aiBaseURL:  aiBaseURL,
 		httpClient: &http.Client{},
 	}
 }
@@ -180,6 +180,22 @@ func (h *AIProxyHandler) SuggestTuneFix(w http.ResponseWriter, r *http.Request) 
 // @Router /api/agents/{id}/ai/rewrite-tune-prompt [post]
 func (h *AIProxyHandler) RewriteTunePrompt(w http.ResponseWriter, r *http.Request) {
 	h.proxy("/ai/assist/tune/rewrite-prompt")(w, r)
+}
+
+// TuneApplyPlan godoc
+// @Summary Build a multi-phase apply plan (Build config + Define) from a tune cycle
+// @Tags ai
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path string true "Agent ID"
+// @Param body body map[string]interface{} true "current_prompt, failure_type, changes, current_build"
+// @Success 200 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 503 {object} map[string]interface{}
+// @Router /api/agents/{id}/ai/tune-apply-plan [post]
+func (h *AIProxyHandler) TuneApplyPlan(w http.ResponseWriter, r *http.Request) {
+	h.proxy("/ai/assist/tune/apply-plan")(w, r)
 }
 
 // AIHealth godoc

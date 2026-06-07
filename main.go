@@ -161,6 +161,7 @@ func main() {
 			r.Post("/ai/check-scope-drift", aiProxy.CheckScopeDrift)
 			r.Post("/ai/suggest-tune-fix", aiProxy.SuggestTuneFix)
 			r.Post("/ai/rewrite-tune-prompt", aiProxy.RewriteTunePrompt)
+			r.Post("/ai/tune-apply-plan", aiProxy.TuneApplyPlan)
 		})
 	})
 

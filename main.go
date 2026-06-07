@@ -104,6 +104,7 @@ func main() {
 	r.Route("/api/agents", func(r chi.Router) {
 		r.Use(appMiddleware.Auth(cfg.JWTSecret))
 		r.Get("/", agentHandler.List)
+		r.Get("/deleted", agentHandler.ListDeleted)
 		r.Post("/", agentHandler.Create)
 		r.Post("/import", exportHandler.Import)
 
@@ -111,6 +112,9 @@ func main() {
 			r.Get("/", agentHandler.Get)
 			r.Patch("/", agentHandler.Update)
 			r.Delete("/", agentHandler.Delete)
+			r.Post("/restore", agentHandler.Restore)
+			r.Delete("/permanent", agentHandler.PermanentDelete)
+			r.Post("/evolve", agentHandler.Evolve)
 
 			r.Get("/export", exportHandler.Export)
 
@@ -136,6 +140,8 @@ func main() {
 			r.Get("/eval-cases", evalsHandler.ListCases)
 			r.Post("/eval-cases", evalsHandler.CreateCase)
 			r.Patch("/eval-cases/{case_id}", evalsHandler.UpdateCase)
+			r.Get("/eval-case-runs", evalsHandler.ListCaseRuns)
+			r.Post("/eval-cases/{case_id}/runs", evalsHandler.CreateCaseRun)
 
 			r.Get("/observations", observationsHandler.List)
 			r.Post("/observations", observationsHandler.Create)
@@ -144,6 +150,7 @@ func main() {
 			r.Get("/tune-cycles", tuneHandler.List)
 			r.Post("/tune-cycles", tuneHandler.Create)
 			r.Patch("/tune-cycles/{cycle_id}", tuneHandler.UpdateOutcome)
+			r.Post("/tune-cycles/{cycle_id}/apply", tuneHandler.Apply)
 
 			r.Post("/ai/assist/define", aiProxy.AssistDefine)
 			r.Post("/ai/assist/system-prompt", aiProxy.AssistSystemPrompt)
@@ -153,6 +160,7 @@ func main() {
 			r.Post("/ai/analyze-patterns", aiProxy.AnalyzePatterns)
 			r.Post("/ai/check-scope-drift", aiProxy.CheckScopeDrift)
 			r.Post("/ai/suggest-tune-fix", aiProxy.SuggestTuneFix)
+			r.Post("/ai/rewrite-tune-prompt", aiProxy.RewriteTunePrompt)
 		})
 	})
 

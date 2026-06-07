@@ -166,6 +166,22 @@ func (h *AIProxyHandler) SuggestTuneFix(w http.ResponseWriter, r *http.Request) 
 	h.proxy("/ai/assist/tune/suggest-fix")(w, r)
 }
 
+// RewriteTunePrompt godoc
+// @Summary Rewrite a system prompt to apply a tune cycle's changes
+// @Tags ai
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path string true "Agent ID"
+// @Param body body map[string]interface{} true "current_prompt, failure_type, changes"
+// @Success 200 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 503 {object} map[string]interface{}
+// @Router /api/agents/{id}/ai/rewrite-tune-prompt [post]
+func (h *AIProxyHandler) RewriteTunePrompt(w http.ResponseWriter, r *http.Request) {
+	h.proxy("/ai/assist/tune/rewrite-prompt")(w, r)
+}
+
 // AIHealth godoc
 // @Summary Proxy the Python AI service health check
 // @Description Returns AI service status, Ollama reachability, and available models.

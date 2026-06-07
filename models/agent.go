@@ -12,6 +12,8 @@ type Agent struct {
 	CurrentPhase    string     `json:"current_phase"`
 	CreatedAt       time.Time  `json:"created_at"`
 	UpdatedAt       time.Time  `json:"updated_at"`
+	DeletedAt       *time.Time `json:"deleted_at,omitempty"`
+	ParentAgentID   *string    `json:"parent_agent_id,omitempty"`
 }
 
 type AgentPhaseHistory struct {

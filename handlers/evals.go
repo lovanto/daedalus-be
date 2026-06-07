@@ -374,3 +374,113 @@ func (h *EvalsHandler) UpdateCase(w http.ResponseWriter, r *http.Request) {
 
 	utils.JSON(w, http.StatusOK, c)
 }
+
+// ListCaseRuns godoc
+// @Summary List per-test-case run history for an agent (newest first)
+// @Tags evals
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "Agent ID"
+// @Param page query int false "Page" default(1)
+// @Param limit query int false "Limit" default(20)
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /api/agents/{id}/eval-case-runs [get]
+func (h *EvalsHandler) ListCaseRuns(w http.ResponseWriter, r *http.Request) {
+	agentID := chi.URLParam(r, "id")
+	userID := appMiddleware.GetUserID(r)
+	pg := utils.ParsePagination(r)
+
+	if !utils.AgentBelongsToUser(r.Context(), h.db, agentID, userID) {
+		utils.Err(w, http.StatusNotFound, "agent not found")
+		return
+	}
+
+	rows, err := h.db.Query(r.Context(),
+		`SELECT id, case_id, agent_id, passed, actual_output, reasoning, created_at
+		 FROM agent_eval_case_runs
+		 WHERE agent_id = $1
+		 ORDER BY created_at DESC
+		 LIMIT $2 OFFSET $3`,
+		agentID, pg.Limit, pg.Offset(),
+	)
+	if err != nil {
+		utils.Err(w, http.StatusInternalServerError, "failed to fetch case runs")
+		return
+	}
+	defer rows.Close()
+
+	runs := make([]models.AgentEvalCaseRun, 0)
+	for rows.Next() {
+		var run models.AgentEvalCaseRun
+		if err := rows.Scan(&run.ID, &run.CaseID, &run.AgentID, &run.Passed,
+			&run.ActualOutput, &run.Reasoning, &run.CreatedAt); err != nil {
+			utils.Err(w, http.StatusInternalServerError, "failed to scan case run")
+			return
+		}
+		runs = append(runs, run)
+	}
+
+	utils.JSON(w, http.StatusOK, runs)
+}
+
+// CreateCaseRun godoc
+// @Summary Record a single eval case run result
+// @Tags evals
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path string true "Agent ID"
+// @Param case_id path string true "Case ID"
+// @Param body body map[string]interface{} true "Run result payload"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /api/agents/{id}/eval-cases/{case_id}/runs [post]
+func (h *EvalsHandler) CreateCaseRun(w http.ResponseWriter, r *http.Request) {
+	agentID := chi.URLParam(r, "id")
+	caseID := chi.URLParam(r, "case_id")
+	userID := appMiddleware.GetUserID(r)
+
+	if !utils.AgentBelongsToUser(r.Context(), h.db, agentID, userID) {
+		utils.Err(w, http.StatusNotFound, "agent not found")
+		return
+	}
+
+	// Ensure the case belongs to this agent before recording a run against it.
+	var exists bool
+	if err := h.db.QueryRow(r.Context(),
+		`SELECT EXISTS(SELECT 1 FROM agent_eval_cases WHERE id = $1 AND agent_id = $2)`,
+		caseID, agentID,
+	).Scan(&exists); err != nil || !exists {
+		utils.Err(w, http.StatusNotFound, "eval case not found")
+		return
+	}
+
+	var req struct {
+		Passed       bool   `json:"passed"`
+		ActualOutput string `json:"actual_output"`
+		Reasoning    string `json:"reasoning"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.Err(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	var run models.AgentEvalCaseRun
+	err := h.db.QueryRow(r.Context(),
+		`INSERT INTO agent_eval_case_runs (case_id, agent_id, passed, actual_output, reasoning)
+		 VALUES ($1,$2,$3,$4,$5)
+		 RETURNING id, case_id, agent_id, passed, actual_output, reasoning, created_at`,
+		caseID, agentID, req.Passed, req.ActualOutput, req.Reasoning,
+	).Scan(&run.ID, &run.CaseID, &run.AgentID, &run.Passed,
+		&run.ActualOutput, &run.Reasoning, &run.CreatedAt)
+	if err != nil {
+		utils.Err(w, http.StatusInternalServerError, "failed to record case run")
+		return
+	}
+
+	utils.JSON(w, http.StatusCreated, run)
+}

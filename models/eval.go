@@ -47,3 +47,14 @@ type AgentEvalCase struct {
 	IsActive         bool      `json:"is_active"`
 	CreatedAt        time.Time `json:"created_at"`
 }
+
+// AgentEvalCaseRun is one recorded execution of a single eval case.
+type AgentEvalCaseRun struct {
+	ID           string    `json:"id"`
+	CaseID       string    `json:"case_id"`
+	AgentID      string    `json:"agent_id"`
+	Passed       bool      `json:"passed"`
+	ActualOutput string    `json:"actual_output"`
+	Reasoning    string    `json:"reasoning"`
+	CreatedAt    time.Time `json:"created_at"`
+}

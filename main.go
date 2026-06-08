@@ -162,6 +162,7 @@ func main() {
 			r.Post("/ai/suggest-tune-fix", aiProxy.SuggestTuneFix)
 			r.Post("/ai/rewrite-tune-prompt", aiProxy.RewriteTunePrompt)
 			r.Post("/ai/tune-apply-plan", aiProxy.TuneApplyPlan)
+			r.Post("/ai/chat", aiProxy.Chat)
 		})
 	})
 
